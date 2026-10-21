@@ -160,6 +160,42 @@
             </div>
         @endif
 
+        @php
+            $prefillEmail = old('email');
+            $prefillPassword = '';
+            if (request('as') === 'admin') {
+                $prefillEmail = 'admin@demo.krishihat.test';
+                $prefillPassword = 'Password123!';
+            } elseif (request('as') === 'farmer') {
+                $prefillEmail = 'farmer.mokbul@demo.krishihat.test';
+                $prefillPassword = 'Password123!';
+            } elseif (request('as') === 'buyer') {
+                $prefillEmail = 'buyer.karim@demo.krishihat.test';
+                $prefillPassword = 'Password123!';
+            }
+        @endphp
+
+        <div class="card bg-light border-0 rounded-4 p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-success">⚡ ১-ক্লিকে ডেমো লগইন বাটন:</span>
+                <span class="badge bg-success-subtle text-success small">Quick Fill</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <button type="button" class="btn btn-sm btn-outline-danger d-flex justify-content-between align-items-center text-start" onclick="fillCredentials('admin@demo.krishihat.test', 'Password123!')">
+                    <span>🛡️ <strong>সুপার অ্যাডমিন (Admin)</strong></span>
+                    <span class="small font-monospace text-muted">Password123!</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success d-flex justify-content-between align-items-center text-start" onclick="fillCredentials('farmer.mokbul@demo.krishihat.test', 'Password123!')">
+                    <span>👨‍🌾 <strong>মোকবুল (খামারি)</strong></span>
+                    <span class="small font-monospace text-muted">Password123!</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary d-flex justify-content-between align-items-center text-start" onclick="fillCredentials('buyer.karim@demo.krishihat.test', 'Password123!')">
+                    <span>🛒 <strong>করিম (পাইকারি ক্রেতা)</strong></span>
+                    <span class="small font-monospace text-muted">Password123!</span>
+                </button>
+            </div>
+        </div>
+
         <form action="{{ route('login.store') }}" method="POST">
             @csrf
 
@@ -171,7 +207,7 @@
                     name="email"
                     class="form-control"
                     placeholder="name@example.com"
-                    value="{{ old('email') }}"
+                    value="{{ $prefillEmail }}"
                     autocomplete="email"
                     required
                 >
@@ -187,6 +223,7 @@
                         name="password"
                         class="form-control password-input"
                         placeholder="আপনার পাসওয়ার্ড লিখুন"
+                        value="{{ $prefillPassword }}"
                         autocomplete="current-password"
                         required
                     >
@@ -228,6 +265,17 @@
 </div>
 
 <script>
+    function fillCredentials(email, password) {
+        const emailInput = document.getElementById('email');
+        const passInput = document.getElementById('password');
+        if (emailInput && passInput) {
+            emailInput.value = email;
+            passInput.value = password;
+            passInput.type = 'text'; // momentarily show password so user sees it filled
+            setTimeout(() => { passInput.type = 'password'; }, 1500);
+        }
+    }
+
     document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
         button.addEventListener('click', function () {
             const input = document.getElementById(

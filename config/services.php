@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'sslcommerz' => [
+        'store_id' => env('SSLCOMMERZ_STORE_ID', 'krishihat_sandbox'),
+        'store_password' => env('SSLCOMMERZ_STORE_PASSWORD', 'krishihat_secret@123'),
+        'sandbox' => env('SSLCOMMERZ_IS_SANDBOX', true),
+        'api_domain' => env('SSLCOMMERZ_IS_SANDBOX', true)
+            ? 'https://sandbox.sslcommerz.com'
+            : 'https://securepay.sslcommerz.com',
+    ],
+
 ];

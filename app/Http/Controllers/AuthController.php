@@ -24,6 +24,8 @@ public function register(Request $request)
         'role' => ['required', 'in:farmer,buyer'],
     ]);
 
+    $previousCart = $request->session()->get('cart', []);
+
     $user = User::create([
         'name' => $validated['name'],
         'email' => $validated['email'],
@@ -37,7 +39,11 @@ public function register(Request $request)
     Auth::login($user);
     $request->session()->regenerate();
 
-    return redirect()->route('home')
+    if (!empty($previousCart)) {
+        $request->session()->put('cart', $previousCart);
+    }
+
+    return redirect()->route($user->role === 'farmer' ? 'farmer.dashboard' : 'home')
         ->with('success', 'অ্যাকাউন্ট তৈরি হয়েছে!');
 }
 
@@ -53,10 +59,25 @@ public function register(Request $request)
             'password' => ['required', 'string'],
         ]);
 
+        $previousCart = $request->session()->get('cart', []);
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('home'))
+            if (!empty($previousCart)) {
+                $request->session()->put('cart', $previousCart);
+            }
+
+            $user = $request->user();
+            if ($user->role === 'admin') {
+                $destination = route('admin.dashboard');
+            } elseif ($user->role === 'farmer') {
+                $destination = route('farmer.dashboard');
+            } else {
+                $destination = route('home');
+            }
+
+            return redirect()->to($destination)
                 ->with('success', 'লগইন সফল হয়েছে!');
         }
 
@@ -76,5 +97,64 @@ public function register(Request $request)
 
         return redirect()->route('home')
             ->with('success', 'লগআউট সফল হয়েছে!');
+    }
+
+    public function switchAccount(Request $request)
+    {
+        abort_unless(
+            app()->environment('local', 'testing'),
+            403,
+            'ডেমো অ্যাকাউন্ট সুইচার শুধুমাত্র লোকাল অথবা টেস্টিং পরিবেশের জন্য প্রযোজ্য।'
+        );
+
+        $validated = $request->validate([
+            'target_role' => ['required', 'in:farmer,buyer,admin'],
+        ]);
+
+        $currentUser = $request->user();
+
+        // Security check: non-admins cannot elevate their privilege to admin
+        if ($validated['target_role'] === 'admin' && $currentUser->role !== 'admin') {
+            abort(403, 'অ্যাডমিন অ্যাকাউন্টে অননুমোদিতভাবে সুইচ করার অধিকার আপনার নেই। অ্যাডমিন হিসেবে লগইন করতে নিয়মিত লগইন ফর্ম ব্যবহার করুন।');
+        }
+
+        // Strictly whitelisted demo accounts only - arbitrary user_id or email not permitted
+        $demoRoleEmails = [
+            'farmer' => 'farmer.mokbul@demo.krishihat.test',
+            'buyer' => 'buyer.karim@demo.krishihat.test',
+            'admin' => 'admin@demo.krishihat.test',
+        ];
+
+        $targetEmail = $demoRoleEmails[$validated['target_role']] ?? null;
+        if (! $targetEmail) {
+            return back()->with('error', 'অবৈধ ডেমো রোল অনুরোধ।');
+        }
+
+        $targetUser = User::where('email', $targetEmail)->first();
+
+        if (! $targetUser) {
+            return back()->with('error', 'কাঙ্ক্ষিত ডেমো অ্যাকাউন্টটি ডাটাবেজে পাওয়া যায়নি।');
+        }
+
+        Auth::login($targetUser);
+        $request->session()->regenerate();
+
+        if ($targetUser->role === 'admin') {
+            $destination = route('admin.dashboard');
+        } elseif ($targetUser->role === 'farmer') {
+            $destination = route('farmer.dashboard');
+        } else {
+            $destination = route('profile.show');
+        }
+
+        $roleLabels = [
+            'admin' => 'সিস্টেম অ্যাডমিন',
+            'farmer' => 'খামারি / বিক্রেতা',
+            'buyer' => 'পাইকারি ক্রেতা',
+        ];
+        $roleName = $roleLabels[$targetUser->role] ?? ucfirst($targetUser->role);
+
+        return redirect()->to($destination)
+            ->with('success', "সফলভাবে {$targetUser->name} ({$roleName}) অ্যাকাউন্টে পরিবর্তন করা হয়েছে!");
     }
 }

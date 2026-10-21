@@ -27,6 +27,8 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'verification_status' => 'verified',
+            'farmer_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
@@ -39,6 +41,51 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the farmer's profile is unverified.
+     */
+    public function unverifiedFarmer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'farmer',
+            'verification_status' => 'unverified',
+            'farmer_verified_at' => null,
+            'nid_number' => null,
+            'trade_license_number' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the farmer has submitted verification and is pending admin review.
+     */
+    public function pendingVerification(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'farmer',
+            'verification_status' => 'pending',
+            'farmer_verified_at' => null,
+            'nid_number' => '19901234567890123',
+            'trade_license_number' => 'TRAD/BOG/2026/0124',
+            'farm_name' => 'বগুড়া ডেমো এগ্রো ফার্ম',
+            'verification_submitted_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the farmer verification was rejected by admin.
+     */
+    public function rejectedVerification(string $reason = 'জাতীয় পরিচয়পত্রের কপি অস্পষ্ট।'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'farmer',
+            'verification_status' => 'rejected',
+            'farmer_verified_at' => null,
+            'nid_number' => '19901234567890123',
+            'trade_license_number' => 'TRAD/BOG/2026/0124',
+            'verification_rejection_reason' => $reason,
         ]);
     }
 }

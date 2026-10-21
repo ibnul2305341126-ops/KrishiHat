@@ -666,7 +666,7 @@ body {
                 </div>
             @endif
 
-            <form action="{{ route('register.store') }}" method="POST">
+            <form action="{{ route('register.store', [], false) }}" method="POST">
                 @csrf
 
                 <div class="field-wrap">

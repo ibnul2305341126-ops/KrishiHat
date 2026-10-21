@@ -64,3 +64,9 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## KrishiHat frontend and AI help
+
+The marketplace uses Laravel Blade, Bootstrap 5, and vanilla JavaScript through Laravel Vite. Tailwind CSS and Alpine.js are not used.
+
+The homepage includes a responsive help-chat interface for buyer and farmer questions. This repository does not contain a Python/FastAPI service, an AI endpoint, or AI service configuration. The chat keeps submitted text in the current browser page and reports that the message was not sent; it does not create or simulate an AI answer. To enable real responses, connect the widget to the actual service once its endpoint, request/response contract, and server-side credentials are available. Keep credentials on the server.

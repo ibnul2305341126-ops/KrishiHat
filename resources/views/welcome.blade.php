@@ -1,539 +1,354 @@
+@extends('layouts.app')
 
-<!DOCTYPE html>
-<html lang="bn">
+@section('title', 'KrishiHat — স্মার্ট কৃষি মার্কেটপ্লেস ও ফেয়ার-ট্রেড প্ল্যাটফর্ম')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>KrishiHat | কৃষকের বাজার</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <style>
-        body {
-            background: #f7faf7;
-            color: #24352a;
-            font-family: Arial, sans-serif;
-        }
-
-        .navbar {
-            background: #146c43;
-        }
-
-        .brand {
-            font-size: 25px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-
-        .hero {
-            background: linear-gradient(120deg, #14532d, #22a06b);
-            color: white;
-            padding: 65px 20px;
-            border-radius: 0 0 28px 28px;
-        }
-
-        .hero h1 {
-            font-size: clamp(30px, 5vw, 48px);
-            font-weight: bold;
-        }
-
-        .search-box {
-            max-width: 650px;
-            margin: 25px auto 0;
-        }
-
-        .category-card {
-            background: white;
-            border: 1px solid #e1ebe3;
-            border-radius: 15px;
-            padding: 22px 10px;
-            text-align: center;
-            height: 100%;
-            transition: 0.2s;
-        }
-
-        .category-card:hover {
-            border-color: #198754;
-            transform: translateY(-3px);
-        }
-
-        .category-link {
-            color: #24352a;
-            text-decoration: none;
-        }
-
-        .product-card {
-            background: white;
-            border: 1px solid #e5ebe5;
-            border-radius: 16px;
-            overflow: hidden;
-            height: 100%;
-            transition: 0.2s;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 22px #00000012;
-        }
-
-        .product-image,
-        .product-placeholder {
-            display: flex;
-            width: 100%;
-            height: 190px;
-            object-fit: cover;
-            background: #e9f5e9;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .product-placeholder {
-            font-size: 65px;
-        }
-
-        .price {
-            font-size: 23px;
-            font-weight: bold;
-            color: #198754;
-        }
-
-        .section-title {
-            font-weight: bold;
-        }
-
-        .flash-message {
-            margin-bottom: 20px;
-        }
-
-        footer {
-            background: #123d29;
-            color: white;
-            padding: 28px 0;
-            margin-top: 55px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="brand" href="{{ url('/') }}">🌾 KrishiHat</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarMenu" aria-controls="navbarMenu"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarMenu">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ url('/') }}">হোম</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/') }}#categories">ক্যাটাগরি</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/') }}#products">পণ্যসমূহ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('cart.index') }}">
-                            🛒 কার্ট ({{ array_sum(session('cart', [])) }})
-                        </a>
-                    </li>
-
-                    @guest
-                        <li class="nav-item ms-lg-2">
-                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm my-1">Login</a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a href="{{ route('register') }}" class="btn btn-warning btn-sm my-1">Register</a>
-                        </li>
-                    @endguest
-@auth
-    <li class="nav-item ms-lg-2">
-        <span class="nav-link text-white">
-            👤 {{ Auth::user()->name }}
-        </span>
-    </li>
-
-    {{-- Buyer: Order Tracking --}}
-    @if (Auth::user()->role === 'buyer')
-        <li class="nav-item ms-lg-2">
-            <a href="{{ route('orders.index') }}"
-               class="btn btn-warning btn-sm my-1">
-                📦 আমার অর্ডার / ট্র্যাকিং
-            </a>
-        </li>
-    @endif
-
-    {{-- Farmer: Dashboard --}}
-    @if (Auth::user()->role === 'farmer')
-        <li class="nav-item ms-lg-2">
-            <a href="{{ route('farmer.dashboard') }}"
-               class="btn btn-light btn-sm my-1">
-                🌾 Farmer Dashboard
-            </a>
-        </li>
-    @endif
-
-    {{-- Logout --}}
-    <li class="nav-item ms-lg-2">
-        <form action="{{ route('logout') }}" method="POST" class="d-inline">
-            @csrf
-            <button type="submit" class="btn btn-outline-light btn-sm my-1">
-                Logout
-            </button>
-        </form>
-    </li>
-@endauth
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero text-center">
-        <div class="container">
-
-            <h1>কৃষকের পণ্য, সবার বাজার</h1>
-
-            <p class="lead mt-3">
-                কৃষকের কাছ থেকে সরাসরি তাজা কৃষিপণ্য খুঁজে নিন।
-            </p>
-
-            <form
-                action="{{ url('/') }}"
-                method="GET"
-                class="search-box"
-            >
-                <div class="input-group input-group-lg">
-
-                    <input
-                        type="text"
-                        name="search"
-                        class="form-control"
-                        placeholder="পণ্যের নাম লিখুন..."
-                        value="{{ request('search') }}"
-                        aria-label="পণ্য খুঁজুন"
-                    >
-
-                    <button
-                        type="submit"
-                        class="btn btn-warning fw-bold"
-                    >
-                        খুঁজুন
-                    </button>
-
+@section('content')
+<main class="marketplace-home">
+    @if (session('success'))
+        <div class="container pt-3">
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm border-0" role="status">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">✓</span>
+                    <span>{{ session('success') }}</span>
                 </div>
-            </form>
-
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         </div>
-    </section>
-
-    <main class="container py-5">
-
-        <!-- Success and Error Messages -->
-        @if (session('success'))
-            <div
-                class="alert alert-success alert-dismissible fade show flash-message"
-                role="alert"
-            >
-                {{ session('success') }}
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                ></button>
+    @endif
+    @if (session('error'))
+        <div class="container pt-3">
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm border-0" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">⚠️</span>
+                    <span>{{ session('error') }}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
+        </div>
+    @endif
 
-        @if (session('error'))
-            <div
-                class="alert alert-danger alert-dismissible fade show flash-message"
-                role="alert"
-            >
-                {{ session('error') }}
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                ></button>
+    {{-- KrishiMarket Inspired Hero Section (60 FPS Visuals) --}}
+    <section class="hero-section py-4" aria-labelledby="marketplace-heading">
+        <div class="container">
+            <div class="hero-card-banner km-hero-banner p-4 p-lg-5 rounded-4 text-white position-relative overflow-hidden">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-7">
+                        <div class="hero-tag-badge km-hero-tag mb-3 d-inline-flex align-items-center gap-2">
+                            <span>✨</span> স্মার্ট কৃষি মার্কেটপ্লেস ও ফেয়ার-ট্রেড প্ল্যাটফর্ম
+                        </div>
+                        <h1 id="marketplace-heading" class="display-6 fw-bold mb-3 hero-main-title km-hero-title">
+                            কৃষকের সরাসরি ফসল, মধ্যস্বত্বভোগীহীন পাইকারি কেনাবেচা
+                        </h1>
+                        <p class="lead fs-6 text-white-50 mb-4 hero-sub-desc km-hero-desc">
+                            বগুড়া, রাজশাহী ও দিনাজপুরের যাচাইকৃত কৃষকদের কাছ থেকে তাজা ধান, আলু ও পেঁয়াজ কিনুন। প্রতি লিস্টিংয়ে রয়েছে মেশিনে আর্দ্রতা ও ন্যায্য মূল্য মূল্যায়ন।
+                        </p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{{ route('forecast.index') }}" class="btn btn-warning btn-lg fw-bold px-4 py-3 text-dark d-inline-flex align-items-center justify-content-center gap-2 shadow" style="border-radius: 12px; transition: var(--km-transition);">
+                                <span>⚡</span> এআই দর পূর্বাভাস দেখুন
+                            </a>
+                            <a href="{{ route('orders.index') }}" class="btn btn-outline-light btn-lg fw-semibold px-4 py-3 d-inline-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; backdrop-filter: blur(8px); transition: var(--km-transition);">
+                                <span>📦</span> আমার অর্ডার ট্র্যাক করুন
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25 shadow-lg backdrop-blur" style="backdrop-filter: blur(12px);">
+                            <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom border-white border-opacity-20">
+                                <div>
+                                    <div class="small text-white-50">জাতীয় কৃষি পোর্টাল ডাটাবেজ</div>
+                                    <div class="h6 mb-0 text-white fw-bold">🇧🇩 বাংলাদেশ এগ্রো মার্কেট ডাটা</div>
+                                </div>
+                                <span class="badge bg-success text-white px-2 py-1 small">সক্রিয় মার্কেট</span>
+                            </div>
+                            <div class="row g-3 text-center">
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-dark bg-opacity-25 border border-white border-opacity-10">
+                                        <div class="h4 mb-0 fw-extrabold text-warning">৬৪+</div>
+                                        <small class="text-white-50" style="font-size: 0.72rem;">জেলা কভারেজ</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-dark bg-opacity-25 border border-white border-opacity-10">
+                                        <div class="h4 mb-0 fw-extrabold text-success text-light">১০০%</div>
+                                        <small class="text-white-50" style="font-size: 0.72rem;">এসক্রো সুরক্ষা</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-dark bg-opacity-25 border border-white border-opacity-10">
+                                        <div class="h4 mb-0 fw-extrabold text-info">DAM</div>
+                                        <small class="text-white-50" style="font-size: 0.72rem;">সরকারি পাইকারি মান</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-dark bg-opacity-25 border border-white border-opacity-10">
+                                        <div class="h4 mb-0 fw-extrabold text-white">২৪/৭</div>
+                                        <small class="text-white-50" style="font-size: 0.72rem;">হোয়াটসঅ্যাপ সাপোর্ট</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 text-center text-white-50 small border-top border-white border-opacity-10" style="font-size: 0.75rem;">
+                                🔒 বিএডিসি ও কৃষি বিপণন অধিদপ্তরের মানসম্মত ডিজিটাল প্ল্যাটফর্ম
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        @endif
+        </div>
 
-        <!-- Categories -->
-        <section id="categories" class="mb-5">
+        {{-- 4 Trust Pillars (Inspired by KrishiMarket) --}}
+        <div class="container mt-4">
+            <div class="km-trust-strip">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="km-trust-card h-100">
+                            <div class="km-trust-icon">👨‍🌾</div>
+                            <div>
+                                <div class="km-trust-title">সরাসরি কৃষক থেকে ক্রয়</div>
+                                <p class="km-trust-sub">কোনো মধ্যস্বত্বভোগী নেই, কৃষক পান সর্বোচ্চ ন্যায্য মূল্য।</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="km-trust-card h-100">
+                            <div class="km-trust-icon">⚖️</div>
+                            <div>
+                                <div class="km-trust-title">সরকারি পাইকারি MOQ মান</div>
+                                <p class="km-trust-sub">DAM ও BADC অনুমোদিত সঠিক পাইকারি ন্যূনতম পরিমাণ।</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="km-trust-card h-100">
+                            <div class="km-trust-icon">🚚</div>
+                            <div>
+                                <div class="km-trust-title">স্মার্ট এগ্রো লজিস্টিকস</div>
+                                <p class="km-trust-sub">লাইভ জিপিএস রুট ট্র্যাকিং ও দ্রুত সরবরাহ কেন্দ্র নেটওয়ার্ক।</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="km-trust-card h-100">
+                            <div class="km-trust-icon">🛡️</div>
+                            <div>
+                                <div class="km-trust-title">নিরাপদ ডিজিটাল এসক্রো</div>
+                                <p class="km-trust-sub">সিকিউরিটি অডিট ভেরিফিকেশন কোডসহ সম্পূর্ণ সুরক্ষাবলয়।</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <div class="d-flex justify-content-between
-                        align-items-center mb-4">
-
-                <h2 class="section-title mb-0">
-                    পণ্যের ক্যাটাগরি
-                </h2>
-
-                <a href="{{ url('/') }}" class="text-success">
-                    সব দেখুন
-                </a>
-
+        {{-- Featured Category Visual Showcase (KrishiMarket Style) --}}
+        <div class="container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="text-success small fw-bold text-uppercase" style="letter-spacing: 0.05em;">বাছাইকৃত বিভাগসমূহ</span>
+                    <h3 class="h5 fw-bold mb-0 text-dark">কৃষি পণ্যের প্রধান ক্যাটাগরি</h3>
+                </div>
+                <a href="#products" class="text-success text-decoration-none small fw-bold">সমস্ত বিভাগসমূহ দেখুন →</a>
             </div>
 
             <div class="row g-3">
-
-                @forelse ($categories as $category)
-
-                    <div class="col-6 col-md-4 col-lg-3">
-
-                        <a
-                            class="category-link"
-                            href="{{ url('/') }}?category={{ urlencode($category) }}#products"
-                        >
-                            <div class="category-card">
-
-                                <div class="fs-1 mb-2">🌱</div>
-
-                                <h6 class="mb-0">
-                                    {{ $category }}
-                                </h6>
-
+                @php
+                    $categoryIcons = [
+                        'grains' => ['icon' => '🌾', 'subtitle' => 'ধান, গম ও ভুট্টা'],
+                        'vegetables' => ['icon' => '🥬', 'subtitle' => 'তাজা শাকসবজি ও আলু'],
+                        'spices' => ['icon' => '🧅', 'subtitle' => 'পেঁয়াজ, রসুন ও মরিচ'],
+                        'fruits' => ['icon' => '🥭', 'subtitle' => 'বাগানপাকা মৌসুমী ফল'],
+                        'pulses-oilseeds' => ['icon' => '🌻', 'subtitle' => 'সরিষা ও ডাল ফসল'],
+                    ];
+                @endphp
+                @foreach($categories->take(5) as $cat)
+                    @php
+                        $meta = $categoryIcons[$cat->slug] ?? ['icon' => ($cat->icon ?: '🌱'), 'subtitle' => 'খামারের তাজা ফসল'];
+                        $isActive = request('category') === $cat->slug || $selectedCategory?->is($cat);
+                    @endphp
+                    <div class="col-6 col-sm-4 col-md-3 col-lg">
+                        <a href="{{ route('home', array_merge(request()->except('category', 'page'), ['category' => $cat->slug])) }}#products" 
+                           class="km-category-card {{ $isActive ? 'active' : '' }}">
+                            <div class="km-category-icon-circle">
+                                <span>{{ $meta['icon'] }}</span>
                             </div>
+                            <div class="km-category-title">{{ $cat->name }}</div>
+                            <div class="km-category-count">{{ $meta['subtitle'] }}</div>
                         </a>
-
                     </div>
-
-                @empty
-
-                    <div class="col-12">
-                        <p class="text-muted">
-                            এখনো কোনো ক্যাটাগরি যোগ করা হয়নি।
-                        </p>
-                    </div>
-
-                @endforelse
-
+                @endforeach
             </div>
-        </section>
+        </div>
 
-        <!-- Products -->
-        <section id="products">
-
-            <div class="d-flex flex-wrap justify-content-between
-                        align-items-center gap-2 mb-4">
-
-                <div>
-                    <h2 class="section-title mb-1">
-                        আমাদের পণ্যসমূহ
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        কৃষকের কাছ থেকে পছন্দের পণ্য বেছে নিন।
-                    </p>
+        {{-- Modern Search & Filter Bar --}}
+        <div class="container mt-4">
+            <form action="{{ route('home') }}" method="GET" class="market-search-bar p-3 p-md-4 bg-white rounded-4 shadow-sm border d-flex flex-wrap align-items-center gap-3" role="search">
+                <div class="search-input-wrap flex-grow-1 position-relative" style="min-width: 240px;">
+                    <span class="search-icon position-absolute top-50 start-0 translate-middle-y ms-3 text-muted">🔍</span>
+                    <input id="market-search" type="search" name="search" value="{{ request('search') }}" class="form-control ps-5 border-0 bg-light py-2" placeholder="ফসল বা জাত অনুসন্ধান করুন (যেমন: ব্রি ধান, ডায়মন্ড আলু, তাহেরপুরী পেঁয়াজ)...">
                 </div>
 
-                @if (request()->filled('search') ||
-                     request()->filled('category'))
+                <div class="category-select-wrap" style="min-width: 170px;">
+                    <label class="visually-hidden" for="category-filter">ক্যাটাগরি</label>
+                    <select id="category-filter" name="category" class="form-select border-0 bg-light py-2">
+                        <option value="">বিভাগ: সকল ফসল (All)</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->slug }}" @selected(request('category') === $category->slug || $selectedCategory?->is($category))>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <a
-                        href="{{ url('/') }}"
-                        class="btn btn-outline-success"
-                    >
-                        সব পণ্য দেখুন
-                    </a>
+                <div class="district-select-wrap" style="min-width: 170px;">
+                    <label class="visually-hidden" for="district-filter">জেলা</label>
+                    <select id="district-filter" name="district" class="form-select border-0 bg-light py-2">
+                        <option value="">জেলা: সকল জেলা (All)</option>
+                        @php
+                            $presetDistricts = [
+                                'Bogura' => 'বগুড়া (Bogura)',
+                                'Dinajpur' => 'দিনাজপুর (Dinajpur)',
+                                'Rajshahi' => 'রাজশাহী (Rajshahi)',
+                                'Rangpur' => 'রংপুর (Rangpur)',
+                                'Kushtia' => 'কুষ্টিয়া (Kushtia)',
+                                'Jashore' => 'যশোর (Jashore)',
+                                'Cumilla' => 'কুমিল্লা (Cumilla)',
+                                'Barishal' => 'বরিশাল (Barishal)',
+                                'Dhaka' => 'ঢাকা (Dhaka)',
+                            ];
+                            $allDistricts = collect($presetDistricts);
+                            if (isset($distinctDistricts)) {
+                                foreach ($distinctDistricts as $d) {
+                                    if ($d && !$allDistricts->has($d)) {
+                                        $allDistricts->put($d, $d);
+                                    }
+                                }
+                            }
+                        @endphp
+                        @foreach($allDistricts as $distKey => $distName)
+                            <option value="{{ $distKey }}" @selected(strtolower((string) request('district')) === strtolower((string) $distKey) || request('district') === $distName)>
+                                {{ $distName }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
+                <div class="price-slider-wrap d-flex align-items-center gap-2 p-2 bg-light rounded-3" style="min-width: 220px;">
+                    <label class="small text-muted text-nowrap fw-semibold" for="market-max-price">সর্বোচ্চ দর:</label>
+                    <input id="market-max-price" type="range" name="max_price" min="0" max="{{ number_format($priceFilterMaximum, 2, '.', '') }}" step="0.01" value="{{ number_format($maxPrice, 2, '.', '') }}" data-market-price-range class="form-range" @disabled($maximumListingPrice <= 0)>
+                    <output for="market-max-price" data-market-price-output class="small fw-bold text-success text-nowrap">৳{{ number_format($maxPrice, 2) }}</output>
+                </div>
+
+                <button class="btn btn-success px-4 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm" type="submit" style="background: linear-gradient(135deg, #0B6A40 0%, #13814C 100%); border: 0; border-radius: 10px;">
+                    <span>🔍</span> খুঁজুন
+                </button>
+                @if (request('search') || $selectedCategory || request()->filled('max_price') || request('district'))
+                    <a href="{{ route('home') }}#products" class="btn btn-outline-secondary py-2 px-3" style="border-radius: 10px;">রিসেট</a>
                 @endif
+            </form>
+        </div>
+    </section>
 
+    {{-- Product Listings Section matching screenshot --}}
+    <section id="products" class="product-section py-5" style="background: #f8faf8;">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-2">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fs-5">🌾</span>
+                        <h2 class="h4 fw-bold mb-0 text-dark">সরাসরি খামারের তাজা লিস্টিং</h2>
+                    </div>
+                    <p class="text-muted small mb-0">যাচাইকৃত খামার থেকে সেরা মানের তাজা কৃষিপণ্য ও পাইকারি লট</p>
+                </div>
+                <div class="badge bg-white text-dark border fs-6 px-3 py-2 fw-semibold shadow-xs rounded-pill">
+                    {{ $products->count() }} টি ফসল উপলব্ধ
+                </div>
             </div>
 
-            @if (request()->filled('search'))
-                <p>
-                    <strong>খোঁজার ফলাফল:</strong>
-                    {{ request('search') }}
-                </p>
-            @endif
-
-            @if (request()->filled('category'))
-                <p>
-                    <strong>ক্যাটাগরি:</strong>
-                    {{ request('category') }}
-                </p>
+            @if (request('search'))
+                <p class="filter-summary mb-3 p-2 bg-white rounded border d-inline-block small"><strong>“{{ request('search') }}”</strong> এর জন্য ফলাফল দেখানো হচ্ছে</p>
             @endif
 
             <div class="row g-4">
-
                 @forelse ($products as $product)
-
                     <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                        @include('components.product-card', ['product' => $product])
+                    </div>
+                @empty
+                    <div class="col-12">
+                        <div class="card p-5 text-center border-dashed rounded-4 bg-white shadow-sm">
+                            <span class="fs-1 d-block mb-3">🌱</span>
+                            <h3 class="h5 fw-bold">কোনো ফসল পাওয়া যায়নি</h3>
+                            <p class="text-muted small">অন্য ফিল্টার বা নাম দিয়ে পুনরায় সন্ধান করুন।</p>
+                            <div><a href="{{ route('home') }}#products" class="btn btn-success px-4" style="border-radius: 10px;">সকল ফসল দেখুন</a></div>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </section>
 
-                        <div class="product-card">
+    {{-- Google Maps Farm Locations Section --}}
+    @php
+        $productsWithCoordinates = $products->filter(function ($prod) {
+            return $prod->latitude !== null && $prod->longitude !== null && is_numeric($prod->latitude) && is_numeric($prod->longitude);
+        });
+    @endphp
+    @if ($productsWithCoordinates->isNotEmpty())
+        <section class="farm-locations-section py-5 bg-white border-top border-bottom">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-success">📍</span>
+                        <div>
+                            <h2 class="h5 fw-bold mb-0 text-dark">খামারের অবস্থান ও সরবরাহ কেন্দ্র (Google Maps Locations)</h2>
+                            <small class="text-muted">সরাসরি খামার পরিদর্শন ও সরবরাহ কেন্দ্র যাচাইয়ের সঠিক ভৌগোলিক অবস্থান</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small fw-semibold">
+                        ✓ Google Maps মানচিত্র লিঙ্ক উপলব্ধ
+                    </span>
+                </div>
 
-                            <!-- Product Image -->
-                            @if (!empty($product->image))
-
-                                <img
-                                    src="{{ asset($product->image) }}"
-                                    alt="{{ $product->name }}"
-                                    class="product-image"
-                                    loading="lazy"
-                                >
-
-                            @else
-
-                                <div class="product-placeholder">
-                                    🌾
+                <div class="row g-3">
+                    @foreach ($productsWithCoordinates as $locProduct)
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="card p-3 border rounded-4 h-100 location-card shadow-xs" style="transition: var(--km-transition);">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <strong class="fs-6 text-truncate text-dark" title="{{ $locProduct->district }}{{ $locProduct->upazila ? ' (' . $locProduct->upazila . ')' : '' }}">
+                                        📍 {{ $locProduct->district ? $locProduct->district . ($locProduct->upazila ? ' (' . $locProduct->upazila . ')' : '') : 'খামারের অবস্থান' }}
+                                    </strong>
+                                    <span class="badge bg-success-subtle text-success small">মানচিত্র যুক্ত</span>
                                 </div>
-
-                            @endif
-
-                            <!-- Product Information -->
-                            <div class="p-3">
-
-                                <span class="badge text-bg-success mb-2">
-                                    {{ $product->category ?: 'অন্যান্য' }}
-                                </span>
-
-                                <h5 class="fw-bold">
-                                    {{ $product->name }}
-                                </h5>
-
-                                <p class="text-muted small">
-                                    {{ $product->description ?: 'কোনো বিবরণ দেওয়া হয়নি।' }}
-                                </p>
-
-                                <div class="price">
-                                    ৳{{ number_format((float) $product->price, 2) }}
-
-                                    <small class="text-muted fs-6">
-                                        / {{ $product->unit ?: 'একক' }}
-                                    </small>
-                                </div>
-
-                                <!-- Stock Status -->
-                                <p class="small mt-2 mb-3">
-
-                                    @if ($product->stock > 0)
-
-                                        <span class="text-success">
-                                            স্টকে আছে:
-                                            {{ $product->stock }}
-                                            {{ $product->unit ?: 'একক' }}
-                                        </span>
-
-                                    @else
-
-                                        <span class="text-danger">
-                                            স্টক শেষ
-                                        </span>
-
-                                    @endif
-
-                                </p>
-
-                                <!-- Product Details -->
-                                <a
-                                    href="{{ route('products.show', $product->id) }}"
-                                    class="btn btn-success w-100"
-                                >
-                                    বিস্তারিত দেখুন
+                                <p class="small text-muted mb-3 text-truncate">{{ $locProduct->name }} • <span class="text-success fw-bold">৳{{ number_format((float) $locProduct->price, 2) }}</span>/{{ $locProduct->unit ?: 'kg' }}</p>
+                                <a href="{{ $locProduct->google_maps_search_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary mt-auto d-inline-flex align-items-center justify-content-center gap-1 rounded-3">
+                                    <span>📍</span> Google Maps-এ দেখুন ↗
                                 </a>
-
-                                <!-- Add to Cart -->
-                                @if ($product->stock > 0)
-
-                                    <form
-                                        action="{{ route('cart.add', $product->id) }}"
-                                        method="POST"
-                                        class="mt-2"
-                                    >
-                                        @csrf
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-outline-success w-100"
-                                        >
-                                            🛒 Add to Cart
-                                        </button>
-
-                                    </form>
-
-                                @else
-
-                                    <button
-                                        type="button"
-                                        class="btn btn-secondary w-100 mt-2"
-                                        disabled
-                                    >
-                                        স্টক শেষ
-                                    </button>
-
-                                @endif
-
                             </div>
                         </div>
-                    </div>
-
-                @empty
-
-                    <div class="col-12">
-
-                        <div class="text-center bg-white rounded-4 p-5">
-
-                            <div class="display-3">🔎</div>
-
-                            <h4 class="mt-3">
-                                কোনো পণ্য পাওয়া যায়নি
-                            </h4>
-
-                            <p class="text-muted">
-                                অন্য নামে খুঁজে দেখুন অথবা সব পণ্য দেখুন।
-                            </p>
-
-                            <a
-                                href="{{ url('/') }}"
-                                class="btn btn-success"
-                            >
-                                সব পণ্য দেখুন
-                            </a>
-
-                        </div>
-                    </div>
-
-                @endforelse
-
+                    @endforeach
+                </div>
             </div>
         </section>
+    @endif
 
-    </main>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container text-center">
-
-            <h4 class="fw-bold">🌾 KrishiHat</h4>
-
-            <p class="mb-1">
-                বাংলাদেশের কৃষক ও ক্রেতার ডিজিটাল বাজার
-            </p>
-
-            <small>
-                © {{ date('Y') }} KrishiHat. সর্বস্বত্ব সংরক্ষিত।
-            </small>
-
+    {{-- Category Pills Section --}}
+    <section id="categories" class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="text-success small fw-bold text-uppercase" style="letter-spacing: 0.05em;">ক্যাটাগরি অনুযায়ী ফসল</span>
+                <h2 class="h4 fw-bold mb-0 text-dark">ফসলের বিভাগসমূহ</h2>
+            </div>
+            <a href="#products" class="text-success text-decoration-none fw-semibold">সকল পণ্য দেখুন →</a>
         </div>
-    </footer>
+        <div class="d-flex flex-wrap gap-2">
+            @forelse ($categories as $category)
+                <a class="btn btn-outline-success rounded-pill px-3 py-2 {{ $selectedCategory?->is($category) ? 'active' : '' }}" href="{{ route('categories.show', $category->slug) }}" style="transition: var(--km-transition);">
+                    <span class="me-1">{{ $category->icon ?: '🌱' }}</span> {{ $category->name }}
+                </a>
+            @empty
+                <p class="text-muted small mb-0">কোনো ক্যাটাগরি তৈরি করা হয়নি।</p>
+            @endforelse
+        </div>
+    </section>
+</main>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
