@@ -126,6 +126,22 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Payment::class);
     }
 
+    public function addresses()
+    {
+        return $this->hasMany(\App\Models\UserAddress::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(\App\Models\Review::class);
+    }
+
+    public function defaultAddress(): ?\App\Models\UserAddress
+    {
+        return $this->addresses()->where('is_default', true)->first()
+            ?: $this->addresses()->latest()->first();
+    }
+
     public function activeSubscription(): ?\App\Models\UserSubscription
     {
         return $this->subscriptions()

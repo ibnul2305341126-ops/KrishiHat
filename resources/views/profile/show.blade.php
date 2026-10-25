@@ -17,7 +17,11 @@
                 <h1 class="dashboard-title mb-1">আপনার প্রোফাইল (Profile)</h1>
                 <p class="text-secondary mb-0">আপনার ব্যক্তিগত তথ্য, অ্যাকাউন্ট রোল ও নিরাপত্তা ব্যবস্থাপনা</p>
             </div>
-            <div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a href="{{ route('addresses.index') }}" class="btn btn-outline-success d-inline-flex align-items-center gap-1 shadow-xs">
+                    <span>📍</span>
+                    <span>ডেলিভারি ঠিকানা</span>
+                </a>
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-xs">

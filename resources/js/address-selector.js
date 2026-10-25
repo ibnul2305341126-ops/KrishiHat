@@ -49,9 +49,11 @@ export function initAddressSelector(containerId = 'bd-address-selector') {
     function populateSelect(select, items, selectedValue, labelKey = 'name_bn', subLabelKey = 'name_en') {
         if (!select) return;
         const currentVal = selectedValue || select.dataset.initialValue || '';
-        const placeholder = select.getAttribute('data-placeholder') || 'নির্বাচন করুন';
+        const defaultPlaceholder = (items.length === 0 && select === unionSelect)
+            ? 'শহরাঞ্চল / কোনো ইউনিয়ন নেই (প্রযোজ্য নয়)'
+            : (select.getAttribute('data-placeholder') || 'নির্বাচন করুন');
         
-        let html = `<option value="">-- ${placeholder} --</option>`;
+        let html = `<option value="">-- ${defaultPlaceholder} --</option>`;
         items.forEach(item => {
             const isSelected = String(item.id) === String(currentVal);
             const mainLabel = item[labelKey] || item.name_en;

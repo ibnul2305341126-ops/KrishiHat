@@ -100,7 +100,17 @@ class Product extends Model
         return $this->belongsTo(Union::class, 'union_id');
     }
 
+    public function unionRecord(): BelongsTo
+    {
+        return $this->belongsTo(Union::class, 'union_id');
+    }
+
     public function urbanArea(): BelongsTo
+    {
+        return $this->belongsTo(UrbanArea::class, 'urban_area_id');
+    }
+
+    public function urbanAreaRecord(): BelongsTo
     {
         return $this->belongsTo(UrbanArea::class, 'urban_area_id');
     }
@@ -202,5 +212,20 @@ class Product extends Model
         }
 
         return 'অবস্থান দেওয়া হয়নি';
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(\App\Models\Review::class);
+    }
+
+    public function averageRating(): float
+    {
+        return (float) round($this->reviews()->avg('rating') ?: 0, 1);
+    }
+
+    public function reviewsCount(): int
+    {
+        return (int) $this->reviews()->count();
     }
 }

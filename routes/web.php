@@ -28,7 +28,10 @@ use App\Http\Controllers\AdminSubscriptionController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminFarmerVerificationController;
 use App\Http\Controllers\FarmerVerificationController;
+use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\GeoAddressController;
+use App\Http\Controllers\Api\MarketplaceApiController;
 use App\Models\Category;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -151,6 +154,25 @@ Route::prefix('api/geo')->name('geo.')->group(function () {
     Route::get('/post-offices', [GeoAddressController::class, 'postOffices'])->name('post-offices');
 });
 
+// Marketplace & SaaS REST API
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/products', [MarketplaceApiController::class, 'products'])->name('products.index');
+    Route::get('/products/{product}', [MarketplaceApiController::class, 'showProduct'])->name('products.show');
+    Route::get('/categories', [MarketplaceApiController::class, 'categories'])->name('categories.index');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/addresses', [UserAddressController::class, 'index'])->name('addresses.index');
+        Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
+        Route::put('/addresses/{address}', [UserAddressController::class, 'update'])->name('addresses.update');
+        Route::delete('/addresses/{address}', [UserAddressController::class, 'destroy'])->name('addresses.destroy');
+        Route::post('/addresses/{address}/default', [UserAddressController::class, 'setDefault'])->name('addresses.set-default');
+
+        Route::get('/orders', [MarketplaceApiController::class, 'orders'])->name('orders.index');
+        Route::get('/orders/{order}', [MarketplaceApiController::class, 'showOrder'])->name('orders.show');
+        Route::get('/offers', [MarketplaceApiController::class, 'offers'])->name('offers.index');
+    });
+});
+
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
@@ -238,6 +260,8 @@ Route::get('/products/{product}', function (Product $product) {
     $product->load(['farmer', 'photos', 'categoryRecord']);
     return view('products.show', compact('product'));
 })->name('products.show');
+
+Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
 
 // Add to Cart
 Route::post('/cart/add/{product}', function (Request $request, Product $product) {
@@ -334,8 +358,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/farmer-verification', [FarmerVerificationController::class, 'submit'])->name('profile.farmer-verification');
+    Route::get('/profile/addresses', [UserAddressController::class, 'index'])->name('addresses.index');
+    Route::post('/profile/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
+    Route::put('/profile/addresses/{address}', [UserAddressController::class, 'update'])->name('addresses.update');
+    Route::delete('/profile/addresses/{address}', [UserAddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::post('/profile/addresses/{address}/default', [UserAddressController::class, 'setDefault'])->name('addresses.set-default');
     Route::get('/transactions', [TransactionHistoryController::class, 'index'])->name('transactions.index');
     Route::post('/plans/{plan}/subscribe', [SubscriptionController::class, 'subscribe'])->name('plans.subscribe');
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('products.reviews.store');
 });
 
 // Farmer Product Management

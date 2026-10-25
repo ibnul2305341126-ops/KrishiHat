@@ -40,13 +40,75 @@ class CheckoutController extends Controller
             $total += $product->price * (int) $cart[$product->id];
         }
 
-        return view('checkout', compact('products', 'cart', 'total'));
+        $savedAddresses = $user->addresses()
+            ->with(['division', 'district', 'upazila', 'union', 'urbanArea', 'postOffice'])
+            ->orderByDesc('is_default')
+            ->get();
+        $divisions = \App\Models\Division::orderBy('name_bn')->get();
+
+        return view('checkout', compact('products', 'cart', 'total', 'savedAddresses', 'divisions'));
     }
 
     // Place order
     public function store(Request $request)
     {
         abort_unless($request->user()->role === 'buyer', 403);
+
+        // Support saved address selection
+        if ($request->filled('delivery_address_id')) {
+            $savedAddr = $request->user()->addresses()->where('id', $request->delivery_address_id)->first();
+            if ($savedAddr) {
+                if (!$request->filled('delivery_address')) {
+                    $request->merge(['delivery_address' => $savedAddr->formatted_address]);
+                }
+                if (!$request->filled('phone')) {
+                    $request->merge(['phone' => $savedAddr->phone]);
+                }
+            }
+        }
+
+        // Support structured cascading address inputs
+        if ($request->filled('division_id') && $request->filled('district_id') && $request->filled('upazila_id')) {
+            $addrValidation = app(\App\Services\AddressValidationService::class);
+            $addrValidation->validateChain($request->all());
+
+            if (!$request->filled('delivery_address')) {
+                $div = \App\Models\Division::find($request->division_id);
+                $dist = \App\Models\District::find($request->district_id);
+                $upz = \App\Models\Upazila::find($request->upazila_id);
+                $uni = $request->filled('union_id') ? \App\Models\Union::find($request->union_id) : null;
+                $urb = $request->filled('urban_area_id') ? \App\Models\UrbanArea::find($request->urban_area_id) : null;
+                $po = $request->filled('post_office_id') ? \App\Models\PostOffice::find($request->post_office_id) : null;
+
+                $addrParts = array_filter([
+                    $request->input('street_address'),
+                    $uni?->name_bn ?: $uni?->name_en,
+                    $urb?->name_bn ?: $urb?->name_en,
+                    $upz?->name_bn ?: $upz?->name_en,
+                    $dist?->name_bn ?: $dist?->name_en,
+                    $div?->name_bn ?: $div?->name_en,
+                    $request->input('postal_code') ? "পোস্ট কোড: " . $request->input('postal_code') : ($po?->post_code ? "পোস্ট কোড: " . $po->post_code : null),
+                ]);
+                $request->merge(['delivery_address' => implode(', ', $addrParts)]);
+            }
+
+            if ($request->boolean('save_address')) {
+                $request->user()->addresses()->create([
+                    'title' => $request->input('address_title', 'Home'),
+                    'recipient_name' => $request->input('recipient_name', $request->user()->name),
+                    'phone' => $request->input('phone', '01700000000'),
+                    'division_id' => $request->division_id,
+                    'district_id' => $request->district_id,
+                    'upazila_id' => $request->upazila_id,
+                    'union_id' => $request->union_id,
+                    'urban_area_id' => $request->urban_area_id,
+                    'post_office_id' => $request->post_office_id,
+                    'postal_code' => $request->postal_code,
+                    'street_address' => $request->input('street_address', $request->input('delivery_address')),
+                    'is_default' => $request->user()->addresses()->count() === 0,
+                ]);
+            }
+        }
 
         $data = $request->validate([
             'delivery_address' => 'required|string|max:2000',
