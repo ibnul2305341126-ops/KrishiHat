@@ -261,6 +261,29 @@ Route::post('/switch-account', [AuthController::class, 'switchAccount'])
     ->middleware('auth')
     ->name('switch-account');
 
+// 1-Click Instant Demo Login (Local development / Lab demonstration)
+Route::get('/demo-login/{role}', function ($role) {
+    abort_unless(app()->environment('local', 'testing'), 403);
+    $demoUsers = [
+        'buyer' => 'buyer.karim@demo.krishihat.test',
+        'farmer' => 'farmer.mokbul@demo.krishihat.test',
+        'admin' => 'admin@demo.krishihat.test',
+    ];
+    $email = $demoUsers[$role] ?? null;
+    abort_unless($email, 404, 'Unknown demo role');
+    $user = \App\Models\User::where('email', $email)->firstOrFail();
+    \Illuminate\Support\Facades\Auth::login($user);
+    request()->session()->regenerate();
+
+    if ($role === 'buyer') {
+        return redirect()->route('addresses.index')->with('success', 'করিম (ক্রেতা) হিসেবে সফলভাবে লগইন হয়েছে!');
+    } elseif ($role === 'farmer') {
+        return redirect()->route('farmer.dashboard')->with('success', 'মকবুল (কৃষক) হিসেবে সফলভাবে লগইন হয়েছে!');
+    } else {
+        return redirect()->route('admin.dashboard')->with('success', 'অ্যাডমিন হিসেবে সফলভাবে লগইন হয়েছে!');
+    }
+})->name('demo-login');
+
 // Product Details
 Route::get('/products/{product}', function (Product $product) {
     $product->load(['farmer', 'photos', 'categoryRecord']);

@@ -159,6 +159,21 @@
             </div>
         @endif
 
+        <div class="card bg-light border-success-subtle mb-4 p-3 rounded-3">
+            <span class="small fw-bold text-success mb-2 d-block text-center">⚡ ল্যাব পরীক্ষার জন্য ১-ক্লিকে সরাসরি লগইন করুন:</span>
+            <div class="d-grid gap-2">
+                <a href="{{ route('demo-login', 'buyer') }}" class="btn btn-outline-success btn-sm fw-bold">
+                    🛒 ক্রেতা হিসেবে লগইন (Karim Buyer) →
+                </a>
+                <a href="{{ route('demo-login', 'farmer') }}" class="btn btn-outline-primary btn-sm fw-bold">
+                    🌾 কৃষক হিসেবে লগইন (Mokbul Farmer) →
+                </a>
+                <a href="{{ route('demo-login', 'admin') }}" class="btn btn-outline-dark btn-sm fw-bold">
+                    🛡️ অ্যাডমিন হিসেবে লগইন (Admin) →
+                </a>
+            </div>
+        </div>
+
         <form action="{{ route('login.store') }}" method="POST">
             @csrf
 
