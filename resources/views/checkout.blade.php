@@ -29,6 +29,22 @@
                 <h2 class="h4 mb-3 fw-bold">ডেলিভারি ও যোগাযোগের ঠিকানা</h2>
                 <form action="{{ route('checkout.store') }}" method="POST">
                     @csrf
+                    @if(isset($savedAddresses) && $savedAddresses->isNotEmpty())
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-success" for="saved_address_selector">
+                                📍 সংরক্ষিত ঠিকানা থেকে নির্বাচন করুন (Saved addresses)
+                            </label>
+                            <select id="saved_address_selector" name="delivery_address_id" class="form-select border-success-subtle bg-light">
+                                <option value="">-- নতুন ঠিকানা লিখুন অথবা নিচে সংরক্ষিত ঠিকানা বেছে নিন --</option>
+                                @foreach($savedAddresses as $addr)
+                                    <option value="{{ $addr->id }}" data-address="{{ $addr->formatted_address }}" data-phone="{{ $addr->phone }}" {{ $addr->is_default ? 'selected' : '' }}>
+                                        {{ $addr->title ?: 'ঠিকানা' }}: {{ $addr->formatted_address }} [ফোন: {{ $addr->phone }}] {{ $addr->is_default ? '★ ডিফল্ট' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <div class="mb-3">
                         <label class="form-label fw-semibold" for="delivery_address">ডেলিভারির সম্পূর্ণ ঠিকানা (Delivery address)</label>
                         <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" maxlength="2000" placeholder="যেমন: দোকান নং ১২, আড়তপট্টি, কারওয়ান বাজার, ঢাকা…" required>{{ old('delivery_address') }}</textarea>
@@ -163,6 +179,27 @@
 
                         radios.forEach(radio => radio.addEventListener('change', updateBankSection));
                         updateBankSection();
+
+                        const addrSelector = document.getElementById('saved_address_selector');
+                        if (addrSelector) {
+                            function applySavedAddress() {
+                                const opt = addrSelector.options[addrSelector.selectedIndex];
+                                if (opt && opt.dataset.address) {
+                                    const addrInput = document.getElementById('delivery_address');
+                                    const phoneInput = document.getElementById('phone');
+                                    if (addrInput && !addrInput.value.trim()) addrInput.value = opt.dataset.address;
+                                    if (phoneInput && !phoneInput.value.trim()) phoneInput.value = opt.dataset.phone;
+                                }
+                            }
+                            addrSelector.addEventListener('change', function() {
+                                const opt = this.options[this.selectedIndex];
+                                if (opt && opt.dataset.address) {
+                                    document.getElementById('delivery_address').value = opt.dataset.address;
+                                    document.getElementById('phone').value = opt.dataset.phone;
+                                }
+                            });
+                            applySavedAddress();
+                        }
                     });
                 </script>
             </section>

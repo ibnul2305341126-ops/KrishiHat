@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 | All responses are JSON.
 */
 
-Route::prefix('v1')->name('api.')->middleware('throttle:krishihat-api')->group(function () {
+Route::prefix('v1')->name('v1.')->middleware('throttle:krishihat-api')->group(function () {
 
     // ---- Public ------------------------------------------------------
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
