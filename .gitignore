@@ -24,6 +24,3 @@ yarn-error.log
 /database/data/sources
 *.sql
 *.bak
-
-.vercel
-.env*
