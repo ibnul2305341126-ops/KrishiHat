@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm ci && npm run build && composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && php artisan migrate --force --no-interaction && php artisan db:seed --force --no-interaction",
   "builds": [
     { "src": "api/index.php", "use": "vercel-php@0.7.3" },
     { "src": "public/**", "use": "@vercel/static" }
